@@ -44,13 +44,15 @@ func main() {
 	app.Version = "0.1.0"
 	app.Usage = fmt.Sprintf("%s [--help] VERSION", app.Name)
 	app.Commands = nil
-	app.Copyright = "Copyright (c) 2015 Mike Goelzer (BSD License)"
+	app.Copyright = "Copyright (c) 2015 Mike Goelzer (MIT License)"
 	cli.AppHelpTemplate = `{{.Name}} {{.Version}} - fetches stemcells for vSphere, vCD, Openstack and AWS
+{{.Copyright}}
+
 USAGE
   {{.Usage}}
+
 EXAMPLE
   stemcell 3026
-{{.Copyright}}
 `
 	app.Action = func(c *cli.Context) {
 		if len(c.Args()) != 1 {
