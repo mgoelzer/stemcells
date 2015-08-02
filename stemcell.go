@@ -23,38 +23,47 @@ import (
 
 const boshIoUrlPrefix = "https://bosh.io/d/stemcells/"
 
-// Urls of the four stemcells we want
-type Stemcell struct {
-	boshIoName string
-	pivNetName string
-	version    int
-}
+const awsStemcellBoshIoName = "bosh-aws-xen-hvm-ubuntu-trusty-go_agent"
+const vsphereStemcellBoshIoName = "bosh-vsphere-esxi-ubuntu-trusty-go_agent"
+const vcdStemcellBoshIoName = "bosh-vcloud-esxi-ubuntu-trusty-go_agent"
+const openstackStemcellBoshIoName = "bosh-openstack-kvm-ubuntu-trusty-go_agent-raw"
 
-var awsStemcell Stemcell = Stemcell{boshIoName: "bosh-aws-xen-hvm-ubuntu-trusty-go_agent", pivNetName: "zzz", version: 3026}
-
-var vsphereStemcell Stemcell = Stemcell{boshIoName: "bosh-vsphere-esxi-ubuntu-trusty-go_agent", pivNetName: "zzz", version: 3026}
-var vcdStemcell Stemcell = Stemcell{boshIoName: "bosh-vcloud-esxi-ubuntu-trusty-go_agent", pivNetName: "zzz", version: 3026}
-var openstackStemcell Stemcell = Stemcell{boshIoName: "bosh-openstack-kvm-ubuntu-trusty-go_agent-raw", pivNetName: "zzz", version: 3026}
-
-func main() {
-	stemcells := make([]Stemcell, 0)
-	stemcells = append(stemcells, awsStemcell, vsphereStemcell, vcdStemcell, openstackStemcell)
-	app := cli.NewApp()
-	app.Name = "stemcell"
-	app.Version = "0.1.0"
-	app.Usage = fmt.Sprintf("%s [--help] VERSION", app.Name)
-	app.Commands = nil
-	app.Copyright = "Copyright (c) 2015 Mike Goelzer (MIT License)"
-	cli.AppHelpTemplate = `{{.Name}} {{.Version}} - fetches stemcells for vSphere, vCD, Openstack and AWS
+const appHelpTemplate = `{{.Name}} {{.Version}} - fetches stemcells for vSphere, vCD, Openstack and AWS
 {{.Copyright}}
 
 USAGE
   {{.Usage}}
 
+FLAGS
+  {{range .Flags}}{{.}}
+  {{end}}
+
 EXAMPLE
   stemcell 3026
 `
+
+func main() {
+	stemcellNames := append(make([]string, 0, 4),
+		awsStemcellBoshIoName, vsphereStemcellBoshIoName, vcdStemcellBoshIoName, openstackStemcellBoshIoName)
+	app := cli.NewApp()
+	app.Name = "stemcell"
+	app.Version = "0.1.0"
+	app.Usage = fmt.Sprintf("%s [FLAGS] VERSION", app.Name)
+	app.Commands = nil
+	app.Flags = []cli.Flag{
+		cli.BoolFlag{
+			Name:  "run-tests, t",
+			Usage: "whether to run the unit tests",
+		},
+	}
+	app.Copyright = "Copyright (c) 2015 Mike Goelzer (MIT License)"
+	cli.AppHelpTemplate = appHelpTemplate
+
 	app.Action = func(c *cli.Context) {
+		if c.Bool("run-tests") {
+			fmt.Printf("Tests coming soon...\n")
+			os.Exit(0)
+		}
 		if len(c.Args()) != 1 {
 			fmt.Printf("Error:  wrong number of arguments (try --help)\n")
 			os.Exit(255)
@@ -66,8 +75,8 @@ EXAMPLE
 			os.Exit(255)
 		}
 
-		for _, value := range stemcells {
-			stemcellBoshIoName := value.boshIoName
+		for _, value := range stemcellNames {
+			stemcellBoshIoName := value
 			stemcellFilename, stemcellBytes, md5, err := fetchStemcell(stemcellBoshIoName, version)
 			if err != nil {
 				fmt.Println("fetchStemcell failed")
