@@ -1,7 +1,6 @@
 package main
 
-// Must install Amazon Go SDK:  go get -u github.com/aws/aws-sdk-go/...
-//   and      codegangsta/cli:  go get -u github.com/codegangsta/cli
+// Must install codegangsta/cli:  go get -u github.com/codegangsta/cli
 
 import (
 	"crypto/md5"
@@ -13,10 +12,7 @@ import (
 	"strings"
 	"time"
 
-	//	"github.com/aws/aws-sdk-go/aws"
-	//	"github.com/aws/aws-sdk-go/aws/awserr"
-	//	"github.com/aws/aws-sdk-go/aws/awsutil"
-	//	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/mgoelzer/stemcells/pivnetlib"
 
 	"github.com/codegangsta/cli"
 )
@@ -43,6 +39,8 @@ EXAMPLE
 `
 
 func main() {
+	//pivnetlib.S3Upload()
+
 	stemcellNames := append(make([]string, 0, 4),
 		awsStemcellBoshIoName, vsphereStemcellBoshIoName, vcdStemcellBoshIoName, openstackStemcellBoshIoName)
 	app := cli.NewApp()
