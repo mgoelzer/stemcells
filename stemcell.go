@@ -41,7 +41,7 @@ func main() {
 	stemcells = append(stemcells, awsStemcell, vsphereStemcell, vcdStemcell, openstackStemcell)
 	app := cli.NewApp()
 	app.Name = "stemcell"
-	app.Version = "0.1"
+	app.Version = "0.1.0"
 	app.Usage = fmt.Sprintf("%s [--help] VERSION", app.Name)
 	app.Commands = nil
 	app.Copyright = "Copyright (c) 2015 Mike Goelzer (BSD License)"
