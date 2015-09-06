@@ -38,9 +38,39 @@ EXAMPLE
   stemcell 3026
 `
 
-func main() {
-	//pivnetlib.S3Upload()
+const pivnetProductSlug = "stemcells"
 
+/***************************************************************/
+// Temporary section
+/***************************************************************/
+
+func testCodeToAuth() {
+	if _, responseBodyJsonObj, err := pivnetlib.GetAuthentication(); err != nil {
+		fmt.Printf("\nERROR: %v\n%v\n", err, responseBodyJsonObj)
+		return
+	} else {
+		fmt.Printf("\nGetAuthentication:  ok\n%v\n", responseBodyJsonObj)
+	}
+}
+
+func testCodeToCreateRelease() {
+	if releaseId, _, responseBodyJsonObj, err := pivnetlib.CreateRelease(pivnetProductSlug); err != nil {
+		fmt.Printf("\nERROR: %v\n%v\n", err, responseBodyJsonObj)
+		return
+	} else {
+		fmt.Printf("\nCreateRelease created release Id:  %v\n", releaseId)
+	}
+}
+
+func testCodeToCreateProduct() {
+	//pivnetlib.CreateProduct("Ubuntu Trusty Stemcell for AWS")
+}
+
+/***************************************************************/
+// End -- Temporary section
+/***************************************************************/
+
+func main() {
 	stemcellNames := append(make([]string, 0, 4),
 		awsStemcellBoshIoName, vsphereStemcellBoshIoName, vcdStemcellBoshIoName, openstackStemcellBoshIoName)
 	app := cli.NewApp()
@@ -54,7 +84,6 @@ func main() {
 			Usage: "whether to run the unit tests",
 		},
 	}
-	app.Copyright = "Copyright (c) 2015 Mike Goelzer (MIT License)"
 	cli.AppHelpTemplate = appHelpTemplate
 
 	app.Action = func(c *cli.Context) {
@@ -88,6 +117,7 @@ func main() {
 
 func check(e error) {
 	if e != nil {
+		fmt.Printf("\n\n")
 		panic(e)
 	}
 }
