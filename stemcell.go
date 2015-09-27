@@ -45,7 +45,7 @@ const pivnetProductSlug = "stemcells"
 /***************************************************************/
 
 func testCodeToAuth() {
-	if _, responseBodyJsonObj, err := pivnetlib.GetAuthentication(); err != nil {
+	if _, responseBodyJsonObj, err := pivnetlib.VerifyAuthentication(); err != nil {
 		fmt.Printf("\nERROR: %v\n%v\n", err, responseBodyJsonObj)
 		return
 	} else {
@@ -63,7 +63,7 @@ func testCodeToCreateRelease() {
 }
 
 func testCodeToDeleteRelease() {
-	releaseId := 556
+	releaseId := 557
 	if err := pivnetlib.DeleteRelease(pivnetProductSlug, releaseId); err != nil {
 		fmt.Printf("\nERROR: %v\n", err)
 		return
@@ -86,7 +86,9 @@ func testCodeToCreateProductFile() {
 /***************************************************************/
 
 func main() {
-	testCodeToCreateRelease()
+	testCodeToAuth()
+
+	//testCodeToCreateRelease()
 	//testCodeToDeleteRelease()
 	os.Exit(1)
 	///////////////////////////////

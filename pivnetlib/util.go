@@ -12,7 +12,7 @@ import (
 //
 // Hits Pivnet authentication verification endpoint to verify everything is working
 //
-func GetAuthentication() (responseHeaders string, responseBodyJsonObj interface{}, errRet error) {
+func VerifyAuthentication() (responseHeaders string, responseBodyJsonObj interface{}, errRet error) {
 	// Read the pivnet token
 	pivnetToken, err := getPivNetToken()
 	if err != nil {
