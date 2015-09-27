@@ -62,6 +62,16 @@ func testCodeToCreateRelease() {
 	}
 }
 
+func testCodeToDeleteRelease() {
+	releaseId := 556
+	if err := pivnetlib.DeleteRelease(pivnetProductSlug, releaseId); err != nil {
+		fmt.Printf("\nERROR: %v\n", err)
+		return
+	} else {
+		fmt.Printf("\nDeleteRelease deleted release Id:  %v\n", releaseId)
+	}
+}
+
 func testCodeToCreateProductFile() {
 	if productId, responseHeaders, responseBodyJsonObj, err := pivnetlib.CreateProductFile("stemcells", "TEST PRODUCT - Ubuntu Trusty Stemcell for AWS", "product_files/Pivotal-CF/light-bosh-stemcell-2840-aws-xen-hvm-ubuntu-trusty-go_agent.tgz", "Test test test", "abcdef432523", "9999A", "http://docs.pivotal.io", time.Now()); err != nil {
 		fmt.Printf("\nCreateProductFile ERROR: %v\n%v\n%v\n", err, responseHeaders, responseBodyJsonObj)
@@ -76,7 +86,7 @@ func testCodeToCreateProductFile() {
 /***************************************************************/
 
 func main() {
-	testCodeToCreateRelease()
+	testCodeToDeleteRelease()
 	os.Exit(1)
 	///////////////////////////////
 
