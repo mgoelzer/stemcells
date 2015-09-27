@@ -54,7 +54,7 @@ func testCodeToAuth() {
 }
 
 func testCodeToCreateRelease() {
-	if releaseId, _, responseBodyJsonObj, err := pivnetlib.CreateRelease(pivnetProductSlug); err != nil {
+	if releaseId, _, responseBodyJsonObj, err := pivnetlib.CreateRelease(pivnetProductSlug, "1000", "Description....."); err != nil {
 		fmt.Printf("\nERROR: %v\n%v\n", err, responseBodyJsonObj)
 		return
 	} else {
@@ -62,8 +62,13 @@ func testCodeToCreateRelease() {
 	}
 }
 
-func testCodeToCreateProduct() {
-	//pivnetlib.CreateProduct("Ubuntu Trusty Stemcell for AWS")
+func testCodeToCreateProductFile() {
+	if productId, responseHeaders, responseBodyJsonObj, err := pivnetlib.CreateProductFile("stemcells", "TEST PRODUCT - Ubuntu Trusty Stemcell for AWS", "product_files/Pivotal-CF/light-bosh-stemcell-2840-aws-xen-hvm-ubuntu-trusty-go_agent.tgz", "Test test test", "abcdef432523", "9999A", "http://docs.pivotal.io", time.Now()); err != nil {
+		fmt.Printf("\nCreateProductFile ERROR: %v\n%v\n%v\n", err, responseHeaders, responseBodyJsonObj)
+	} else {
+		fmt.Printf("\nCreateProductFile created product with Id:  %v\n", productId)
+	}
+
 }
 
 /***************************************************************/
@@ -71,6 +76,10 @@ func testCodeToCreateProduct() {
 /***************************************************************/
 
 func main() {
+	testCodeToCreateRelease()
+	os.Exit(1)
+	///////////////////////////////
+
 	stemcellNames := append(make([]string, 0, 4),
 		awsStemcellBoshIoName, vsphereStemcellBoshIoName, vcdStemcellBoshIoName, openstackStemcellBoshIoName)
 	app := cli.NewApp()

@@ -17,6 +17,49 @@ const pivnetTokenFilePath = "/home/ubuntu/.pivnet_token"
 const urlPrefix = "https://network.pivotal.io"
 
 //
+// PivNet JSON types
+//
+type ProductFileInner struct {
+	AwsObjectKey       string   `json:"aws_object_key"`
+	Description        string   `json:"description"`
+	DocsUrl            string   `json:"docs_url"`
+	FileType           string   `json:"file_type"`
+	FileVersion        string   `json:"file_version"`
+	IncludedFiles      []string `json:"included_files"`
+	Md5                string   `json:"md5"`
+	Name               string   `json:"name"`
+	Platforms          []string `json:"platforms"`
+	ReleasedAt         string   `json:"released_at,omitempty"` // must be MM/DD/YYYY
+	Size               int64    `json:"size,omitempty"`        // removed from pivnet examples?
+	SystemRequirements []string `json:"system_requirements"`
+}
+
+type ProductFile struct {
+	ProductFileInner ProductFileInner `json:"product_file"`
+}
+
+type ReleaseInner struct {
+	Version               string            `json:"version"`
+	ReleaseNotesUrl       string            `json:"release_notes_url"`
+	Description           string            `json:"description"`
+	ReleaseDate           string            `json:"release_date"`
+	ReleaseType           string            `json:"release_type"`
+	EndOfSupportDate      string            `json:"end_of_support_date"`
+	EndOfGuidanceDate     string            `json:"end_of_guidance_date"`
+	EndOfAvailabilityDate string            `json:"end_of_availability_date"`
+	Availability          string            `json:"availability"`
+	Eula                  map[string]string `json:"eula"`
+	OssCompliant          string            `json:"oss_compliant"`
+	Eccn                  string            `json:"eccn"`
+	LicenseException      string            `json:"license_exception"`
+	Controlled            bool              `json:"controlled"`
+}
+
+type Release struct {
+	ReleaseInner ReleaseInner `json:"release"`
+}
+
+//
 // Read PivNet token
 //
 func getPivNetToken() (string, error) {
@@ -30,9 +73,6 @@ func getPivNetToken() (string, error) {
 	return fileContents, nil
 }
 
-//
-// Error check function
-//
 func check(e error) {
 	if e != nil {
 		fmt.Printf("\n\n")
@@ -40,11 +80,11 @@ func check(e error) {
 	}
 }
 
+const bDebug = false
+
 //
 // Hits Pivnet authentication verification endpoint to verify everything is working
 //
-const bDebug = false
-
 func GetAuthentication() (responseHeaders string, responseBodyJsonObj interface{}, errRet error) {
 	// Read the pivnet token
 	pivnetToken, err := getPivNetToken()
@@ -86,6 +126,7 @@ func GetAuthentication() (responseHeaders string, responseBodyJsonObj interface{
 	// check the http response status
 	statusCodeMsg, responseHeaders, responseBodyJsonObj, err := checkHttpResponse(response)
 	if err != nil {
+		fmt.Printf("checkHttpResponse returned err=%v\n", err)
 		errRet = err
 		return
 	} else {
@@ -111,18 +152,19 @@ func checkHttpResponse(response string) (statusCodeMsg string, responseHeaders s
 		} else {
 			responseBodyLines = append(responseBodyLines, line)
 		}
-		//if strings.Trim(line, " \n\r") == "" {
 		if line == "" {
 			bInHeaders = false
 		}
 
 		if strings.HasPrefix(line, "Status:") {
-			//fmt.Println(">>" + line)
+			if bDebug {
+				fmt.Println("checkHttpResponse>>" + line)
+			}
 			r, _ := regexp.Compile("Status: ([0-9]+ .*)")
 			line = strings.Trim(line, " \r\n")
 			if r.MatchString(line) {
 				arr := r.FindStringSubmatch(line)
-				statusCodeMsg := arr[1]
+				statusCodeMsg = arr[1]
 				if strings.HasPrefix(statusCodeMsg, "20") {
 					errRet = nil
 				} else {
@@ -136,9 +178,10 @@ func checkHttpResponse(response string) (statusCodeMsg string, responseHeaders s
 	responseBodyStr := strings.Join(responseBodyLines, "\n")
 	responseBodyStr = strings.Trim(responseBodyStr, " \n\r")
 	if bDebug {
-		fmt.Printf("\n-----------------------\n")
-		fmt.Printf("%v", responseBodyStr)
-		fmt.Printf("\n-----------------------\n")
+		fmt.Printf("\n--in:checkHttpResponse--")
+		fmt.Printf("\n----responseBodyStr-----")
+		fmt.Printf("\n%v\n", responseBodyStr)
+		fmt.Printf("------------------------\n")
 	}
 	if responseBodyStr != "" {
 		responseBodyByteArr := []byte(responseBodyStr)
@@ -147,7 +190,9 @@ func checkHttpResponse(response string) (statusCodeMsg string, responseHeaders s
 			errRet = err
 		}
 		if bDebug {
+			fmt.Printf("Dumping 'responseBodyJsonObj':\n")
 			dumpArbitraryJsonObject(responseBodyJsonObj, "")
+			fmt.Printf("/dumping 'responseBodyJsonObj'\n")
 		}
 	}
 
@@ -181,38 +226,7 @@ func dumpArbitraryJsonObject(responseBodyJsonObj interface{}, indent string) {
 	}
 }
 
-func getCreateReleasePostData(version string, release_notes_url string, release_date time.Time, end_of_support_date time.Time, end_of_guidance_date time.Time, end_of_availability_date time.Time) (postData string) {
-	// set the POST data string
-	postData = `{
-  "release": {
-`
-	postData += "    \"version\": \"1001\",\n"
-	postData += "    \"release_notes_url\": \"http://docs.pivotal.io/\",\n"
-	postData += "    \"description\": \"\",\n"
-	postData += "    \"release_date\": \"2015-09-03\",\n"
-	postData += "    \"release_type\": \"Minor Release\",\n"
-	postData += "    \"end_of_support_date\": \"2018-12-31\",\n"
-	postData += "    \"end_of_guidance_date\": \"2018-12-31\",\n"
-	postData += "    \"end_of_availability_date\": \"2018-12-31\",\n"
-	postData += `
-    "availability": "Admins Only",
-    "eula": {
-      "slug": "pivotal_software_eula"
-    },
-    "oss_compliant": "confirm",
-    "eccn": "5D002",
-    "license_exception": "ENC Unrestricted",
-    "controlled": true
-  }
-}`
-
-	if bDebug {
-		fmt.Printf("\n---\nPOST DATA---\n%v\n---------------\n", postData)
-	}
-	return
-}
-
-func CreateRelease(productSlug string) (releaseId int, responseHeaders string, responseBodyJsonObj interface{}, errRet error) {
+func CreateRelease(productSlug string, version string, description string) (releaseId int, responseHeaders string, responseBodyJsonObj interface{}, errRet error) {
 	// Read the pivnet token
 	pivnetToken, err := getPivNetToken()
 	if err != nil {
@@ -235,9 +249,29 @@ func CreateRelease(productSlug string) (releaseId int, responseHeaders string, r
 	// get the post data
 	t := time.Now()
 	tPlusThreeYears := t.AddDate(3, 0, 0)
-	postData := getCreateReleasePostData("1000", "", t, tPlusThreeYears, tPlusThreeYears, tPlusThreeYears)
 
-	// set function to provide POST data
+	//postData := getCreateReleasePostData("1000", "", t, tPlusThreeYears, tPlusThreeYears, tPlusThreeYears)
+
+	r := &Release{
+		ReleaseInner: ReleaseInner{
+			Version:               version,
+			ReleaseNotesUrl:       "http://docs.pivotal.io",
+			Description:           description,
+			ReleaseDate:           t.Format("2006-01-02"),
+			ReleaseType:           "Minor Release",
+			EndOfSupportDate:      tPlusThreeYears.Format("2006-01-02"),
+			EndOfGuidanceDate:     tPlusThreeYears.Format("2006-01-02"),
+			EndOfAvailabilityDate: tPlusThreeYears.Format("2006-01-02"),
+			Availability:          "Admins Only",
+			Eula:                  map[string]string{"slug": "pivotal_software_eula"},
+			OssCompliant:          "confirm",
+			Eccn:                  "5D002",
+			LicenseException:      "ENC Unrestricted",
+			Controlled:            true,
+		},
+	}
+	postData, err := json.MarshalIndent(r, "", "    ")
+	fmt.Printf("\n---POST DATA---\n%s\n---------------\n", postData)
 	easy.Setopt(curl.OPT_POST, true)
 	easy.Setopt(curl.OPT_POSTFIELDSIZE, len(postData))
 	sent := false
@@ -326,11 +360,11 @@ func addPivNetHttpHeaders(easy *curl.CURL, pivnetToken string) {
 	easy.Setopt(curl.OPT_HEADER, 1)
 }
 
-func CreateProduct(productSlug string, pivnetHumanFilename string) error {
+func CreateProductFile(productSlug string, pivnetHumanFilename string, awsObjectKey string, description string, md5String string, version string, docsUrl string, release_date time.Time) (productFileId int, responseHeaders string, responseBodyJsonObj interface{}, errRet error) {
 	// Read the pivnet token
 	pivnetToken, err := getPivNetToken()
 	if err != nil {
-		return err
+		return -1, "", "", err
 	}
 
 	easy := curl.EasyInit()
@@ -340,17 +374,26 @@ func CreateProduct(productSlug string, pivnetHumanFilename string) error {
 	endpointUrl := fmt.Sprintf("%v/api/v2/products/%v/product_files", urlPrefix, productSlug)
 	easy.Setopt(curl.OPT_URL, endpointUrl)
 	easy.Setopt(curl.OPT_VERBOSE, false)
-	fmt.Printf("DEBUG:  endpointUrl='%v'\n", endpointUrl)
+	//fmt.Printf("DEBUG:  endpointUrl='%v'\n", endpointUrl)
 
 	// set the pivnet headers
 	addPivNetHttpHeaders(easy, pivnetToken)
 
-	// get the post data
-	t := time.Now()
-	tPlusThreeYears := t.AddDate(3, 0, 0)
-	postData := getCreateReleasePostData("1000", "", t, tPlusThreeYears, tPlusThreeYears, tPlusThreeYears)
-
-	// set function to provide POST data
+	m := &ProductFile{
+		ProductFileInner: ProductFileInner{
+			AwsObjectKey:       awsObjectKey,
+			Description:        description,
+			DocsUrl:            docsUrl,
+			FileType:           "Software",
+			FileVersion:        version,
+			IncludedFiles:      []string{},
+			Md5:                md5String,
+			Name:               pivnetHumanFilename,
+			SystemRequirements: []string{},
+		},
+	}
+	postData, err := json.MarshalIndent(m, "", "    ")
+	//fmt.Printf("\n---POST DATA---\n%s\n---------------\n", postData)
 	easy.Setopt(curl.OPT_POST, true)
 	easy.Setopt(curl.OPT_POSTFIELDSIZE, len(postData))
 	sent := false
@@ -368,7 +411,7 @@ func CreateProduct(productSlug string, pivnetHumanFilename string) error {
 	response := ""
 	fWriteToString := func(buf []byte, userdata interface{}) bool {
 		if bDebug {
-			fmt.Printf("CreateRelease response> %s", string(buf))
+			fmt.Printf("CreateProductFile response> %s", string(buf))
 		}
 		response += string(buf)
 		return true
@@ -378,52 +421,29 @@ func CreateProduct(productSlug string, pivnetHumanFilename string) error {
 	// invoke curl
 	if err := easy.Perform(); err != nil {
 		fmt.Printf("curl failed\n")
-		return err
+		errRet = err
+		return
 	}
 
 	// check the http response status
-	if statusCodeMsg, _, _, err := checkHttpResponse(response); err != nil {
-		return err
+	statusCodeMsg, responseHeaders, responseBodyJsonObj, err := checkHttpResponse(response)
+	if err != nil {
+		fmt.Printf("Error:  checkHttpResponse returned err=%v\n", err)
+		errRet = err
+		return
 	} else {
+		fmt.Printf(">>>>statusCodeMsg='%v'\n", statusCodeMsg)
+		m := responseBodyJsonObj.(map[string]interface{})
+		//fmt.Printf("***m = '%v'\n", m)
+		mProductFile := m["product_file"].(map[string]interface{})
+		//fmt.Printf("***mProductFile = '%v'\n", mProductFile)
+		idFloat64 := mProductFile["id"].(float64)
+		productFileId = int(idFloat64)
+		//fmt.Printf("productFileId = '%v'\n", productFileId)
+		//fmt.Printf("idFloat64 = '%v'\n", idFloat64)
 		if bDebug {
-			fmt.Printf("CreateProduct success:  %v\n", statusCodeMsg)
+			fmt.Printf("CreateProductFile success:  %v\n", statusCodeMsg)
 		}
-		return nil
+		return
 	}
 }
-
-/*
-curl -i -H "Accept: application/json" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Token $PIVNET_TOKEN" \
-  -XPOST -d '
-{
-  "product_file": {
-    "name": "'"$PIVNET_HUMAN_FILENAME"'",
-    "aws_object_key": "product_files/Pivotal-CF/'$FILENAME'",
-    "description": "",
-    "docs_url": null,
-    "file_type": "Software",
-    "file_version": "'$RELEASE_VERSION'",
-    "included_files": [
-        "'"$FILE_INCLUDES"'"
-    ],
-    "md5": "'$MD5SUM'",
-    "platforms": [
-
-    ],
-    "released_at": "'$RELEASE_DATE'",
-    "size": '$FILE_SIZE',
-    "system_requirements": [
-        "'"$SYSTEM_REQUIREMENTS"'"
-    ],
-    "_links": {
-      "self": {
-        "href": "https://network.pivotal.io/api/v2/products/ops-manager/product_files/130"
-      }
-    }
-  }
-}' \
-  "$URL_PREFIX/api/v2/products/$PRODUCT_SLUG/product_files"
-
-*/
