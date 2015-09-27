@@ -1,5 +1,10 @@
 package pivnetlib
 
+import (
+	"io/ioutil"
+	"strings"
+)
+
 //
 // Constants
 //

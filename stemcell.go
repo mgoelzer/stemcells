@@ -86,7 +86,8 @@ func testCodeToCreateProductFile() {
 /***************************************************************/
 
 func main() {
-	testCodeToDeleteRelease()
+	testCodeToCreateRelease()
+	//testCodeToDeleteRelease()
 	os.Exit(1)
 	///////////////////////////////
 
